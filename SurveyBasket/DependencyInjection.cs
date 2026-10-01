@@ -1,3 +1,4 @@
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 namespace SurveyBasket;
 
 public static class DependencyInjection
@@ -5,7 +6,15 @@ public static class DependencyInjection
     public static IServiceCollection AddDependencies(this IServiceCollection services,
                                                      IConfiguration configuration)
     {
+
         services.AddControllers();
+
+        services.AddCors(options =>
+            options.AddDefaultPolicy(builder =>
+                builder
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!)));
 
         services
             .AddDatabaseConfig(configuration)
@@ -49,27 +58,36 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddFluentValidationConfig(this IServiceCollection services)
+    private static IServiceCollection AddFluentValidationConfig(this IServiceCollection services)
     {
         services
             .AddFluentValidationAutoValidation().AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
+        return services;
     }
 
-    private static IServiceCollection AddAuthConfig(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddAuthConfig(this IServiceCollection services,
+                                                    IConfiguration configuration)
     {
+        services
+            .AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
         services.AddSingleton<IJwtProvider, JwtProvider>();
 
-        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        //services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services
+            .AddOptions<JwtOptions>()
+            .BindConfiguration(JwtOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-        services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+        var jwtSettings = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 
         services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 options.SaveToken = true;
@@ -79,9 +97,9 @@ public static class DependencyInjection
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Audience"]
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key!)),
+                    ValidIssuer = jwtSettings?.Issuer,
+                    ValidAudience = jwtSettings?.Audience
                 };
             });
 

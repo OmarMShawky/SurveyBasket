@@ -1,6 +1,4 @@
-﻿using SurveyBasket.Contracts.Polls;
-
-namespace SurveyBasket.Mapping;
+﻿namespace SurveyBasket.Mapping;
 
 public class MappingConfigurations : IRegister
 {

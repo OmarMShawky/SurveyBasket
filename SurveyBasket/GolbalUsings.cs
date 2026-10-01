@@ -6,9 +6,8 @@ global using System.IdentityModel.Tokens.Jwt;
 global using Mapster;
 global using MapsterMapper;
 global using FluentValidation;
-global using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
-
+global using Microsoft.Extensions.Options;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.EntityFrameworkCore;
@@ -22,3 +21,5 @@ global using SurveyBasket.Services;
 global using SurveyBasket.Persistence;
 global using SurveyBasket.Contracts.Polls;
 global using SurveyBasket.Contracts.Authentication;
+global using SurveyBasket.Abstractions;
+global using SurveyBasket.Errors;

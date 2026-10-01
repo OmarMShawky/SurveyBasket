@@ -21,5 +21,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
-  }
+  },
+  "AllowedOrigins": [
+    "https://www.survey-basket.com"
+  ]
 }
