@@ -4,7 +4,10 @@ public class MappingConfigurations : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config = new TypeAdapterConfig();
-        config.NewConfig<Poll, PollResponse>(); //.Map(des => des.Note, src => src.Summary);
+
+        config.NewConfig<QuestionRequest, Question>()
+            .Map(dest => dest.Answers,
+                 src => src.Answers.Select(answer => new Answer { Content = answer }));
+
     }
 }
