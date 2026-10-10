@@ -67,37 +67,30 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
 
     public async Task<Result> UpdateAsync(int pollId, int id, QuestionRequest request, CancellationToken cancellationToken = default)
     {
-        var question = await _context.Questions
-            .Where(q => q.Id == id && q.PollId == pollId)
-            .Include(q => q.Answers)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (question is null)
-            return Result.Failure(QuestionErrors.NotFound);
-
         var ContentExists = await _context.Questions
-            .AnyAsync(q => q.Content == request.Content && q.Id != id, cancellationToken);
+            .AnyAsync(q => q.PollId == pollId && q.Id != id && q.Content == request.Content, cancellationToken);
 
         if (ContentExists)
             return Result.Failure(QuestionErrors.DuplicatedContent);
 
+
+        var question = await _context.Questions
+            .Include(q => q.Answers)
+            .SingleOrDefaultAsync(q => q.Id == id && q.PollId == pollId, cancellationToken);
+
+        if (question is null)
+            return Result.Failure(QuestionErrors.NotFound);
+
         question.Content = request.Content;
 
-        var currentAnswers = question.Answers.Select(a=>a.Content).ToList();
+        var currentAnswers = question.Answers.Select(a => a.Content).ToList();
 
         var newAnswers = request.Answers.Except(currentAnswers).ToList();
 
-        foreach (var answer in newAnswers)
+        newAnswers.ForEach(answer =>
         {
             question.Answers.Add(new Answer { Content = answer });
-        }
-
-        //newAnswers.ForEach(answer =>
-        //        question.Answers.Add(new Answer { Content = answer }));
-        //newAnswers.ForEach(answer =>
-        //{
-        //    question.Answers.Add(new Answer { Content = answer });
-        //});
+        });
 
         question.Answers.ToList().ForEach(answer =>
         {
@@ -128,24 +121,4 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
         return Result.Success(question.Adapt<QuestionResponse>());
 
     }
-
-    //public async Task<Result> UpdateAsync(int id, QuestionRequest request, CancellationToken cancellationToken = default)
-    //{
-    //    var question = await _context.Questions.FindAsync([id], cancellationToken);
-
-    //    if(question is null)
-    //        return Result.Failure<QuestionResponse>(QuestionErrors.NotFound);
-
-    //    question.Content = request.Content;
-
-
-    //    foreach (var answer in question.Answers)
-    //    {
-    //        foreach(var updatedAnswer in request.Answers)
-    //        {
-    //            answer.Content = updatedAnswer;
-    //        }
-    //    }
-    //    await _context.UpdateAsync(cancellationToken);
-    //}
 }

@@ -32,22 +32,3 @@ public class PollRequestValidator : AbstractValidator<PollRequest>
             .WithMessage("{PropertyName} must be on or after {ComparisonProperty}");
     }
 }
-
-
-//        RuleFor(p => p)
-//            .Must(HasValidDates)
-//            .WithName(nameof(PollRequest.EndsAt))
-//            .WithMessage("{PropertyName} must be greater than or equal to StartsAt");
-
-//        RuleFor(p => p.EndsAt)
-//            .NotEmpty()
-//            .GreaterThanOrEqualTo(p => p.StartsAt);
-
-//    }
-//    private static bool HasValidDates(PollRequest pollRequest)
-//    {
-//        var today = DateOnly.FromDateTime(DateTime.Today);
-
-//        return pollRequest.StartsAt >= today && pollRequest.EndsAt >= pollRequest.StartsAt;
-
-//    }

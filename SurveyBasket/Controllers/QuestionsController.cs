@@ -2,7 +2,7 @@
 
 [Route("api/polls/{pollId}/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize]
 public class QuestionsController(IQuestionService questionService) : ControllerBase
 {
     private readonly IQuestionService _questionService = questionService;
@@ -33,9 +33,8 @@ public class QuestionsController(IQuestionService questionService) : ControllerB
         var result = await _questionService.Addsync(pollId, request, cancellationToken);
 
 
-        return result.IsSuccess
-            ? CreatedAtAction(nameof(Get), new { pollId, result.Value.Id }, result.Value)
-            : result.ToProblem();
+        return result.IsSuccess ? CreatedAtAction(nameof(Get), new { pollId, result.Value.Id }, result.Value)
+                                : result.ToProblem();
     }
 
 

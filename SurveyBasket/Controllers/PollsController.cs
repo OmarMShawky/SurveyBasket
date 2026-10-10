@@ -11,23 +11,17 @@ public class PollsController(IPollService pollService) : ControllerBase
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var polls = await _pollService.GetAllAsync(cancellationToken);
-        var response = polls.Adapt<IEnumerable<PollResponse>>();
 
-        return Ok(response);
+        return Ok(polls);
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get([FromRoute] int id, CancellationToken cancellationToken)
     {
         var result = await _pollService.GetAsync(id, cancellationToken);
 
-        return result.IsSuccess
-            ? Ok(result.Value)
-            : result.ToProblem();
-
+        return result.IsSuccess ? Ok(result.Value) : result.ToProblem();
     }
-
 
     [HttpPost("")]
     public async Task<IActionResult> Add([FromBody] PollRequest request, CancellationToken cancellationToken)
@@ -39,17 +33,21 @@ public class PollsController(IPollService pollService) : ControllerBase
             : result.ToProblem();
     }
 
-
     [HttpPut("{id}")]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] PollRequest request, CancellationToken cancellationToken)
     {
         var result = await _pollService.UpdateAsync(id, request, cancellationToken);
 
-        return result.IsSuccess
-            ? NoContent()
-            : result.ToProblem();
+        return result.IsSuccess ? NoContent() : result.ToProblem();
     }
 
+    [HttpPut("{id:int}/TogglePublish")]
+    public async Task<IActionResult> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        var result = await _pollService.TogglePollStatusAsync(id, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : result.ToProblem();
+    }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete([FromRoute] int id,
@@ -57,20 +55,6 @@ public class PollsController(IPollService pollService) : ControllerBase
     {
         var result = await _pollService.DeleteAsync(id, cancellationToken);
 
-        return result.IsSuccess
-            ? NoContent()
-            : result.ToProblem();
+        return result.IsSuccess ? NoContent() : result.ToProblem();
     }
-
-
-    [HttpPut("{id:int}/TogglePublish")]
-    public async Task<IActionResult> TogglePublishStatusAsync([FromRoute] int id, CancellationToken cancellationToken)
-    {
-        var result = await _pollService.TogglePollStatusAsync(id, cancellationToken);
-
-        return result.IsSuccess
-            ? NoContent()
-            : result.ToProblem();
-    }
-
 }

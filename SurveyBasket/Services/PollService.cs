@@ -4,8 +4,12 @@ public class PollService(ApplicationDbContext context) : IPollService
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<IEnumerable<Poll>> GetAllAsync(CancellationToken cancellationToken)
-        => await _context.Polls.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+    public async Task<IEnumerable<PollResponse>> GetAllAsync(CancellationToken cancellationToken)
+        => await _context.Polls
+                         .AsNoTracking()
+                         .ProjectToType<PollResponse>()
+                         .ToListAsync(cancellationToken: cancellationToken);
+
 
     public async Task<Result<PollResponse>> GetAsync(int id, CancellationToken cancellationToken)
     {
@@ -43,7 +47,7 @@ public class PollService(ApplicationDbContext context) : IPollService
 
         var isTitleDuplicated = await _context.Polls.AnyAsync(p => p.Title == pollRequest.Title && p.Id != id, cancellationToken);
 
-        if(isTitleDuplicated)
+        if (isTitleDuplicated)
             return Result.Failure(PollErrors.DuplicatedTitle);
 
         currentPoll.Title = pollRequest.Title;
