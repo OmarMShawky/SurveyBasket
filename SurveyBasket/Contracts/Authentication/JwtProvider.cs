@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens.Experimental;
+﻿using Microsoft.Extensions.Options;
 
 namespace SurveyBasket.Contracts.Authentication;
 

@@ -30,11 +30,11 @@ public class QuestionsController(IQuestionService questionService) : ControllerB
     public async Task<IActionResult> Add([FromRoute] int pollId, [FromBody] QuestionRequest request,
                                          CancellationToken cancellationToken)
     {
-        var result = await _questionService.Addsync(pollId, request, cancellationToken);
+        var result = await _questionService.AddAsync(pollId, request, cancellationToken);
 
 
-        return result.IsSuccess ? CreatedAtAction(nameof(Get), new { pollId, result.Value.Id }, result.Value)
-                                : result.ToProblem();
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(Get), new { pollId, result.Value.Id }, result.Value) : result.ToProblem();
     }
 
 

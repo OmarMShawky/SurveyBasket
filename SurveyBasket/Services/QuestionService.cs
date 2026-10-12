@@ -9,7 +9,7 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
         var pollExists = await _context.Polls.AnyAsync(p => p.Id == pollId, cancellationToken);
 
         if (!pollExists)
-            return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.NotFound);
+            return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.PollNotFound);
 
         var questions = await _context.Questions
             .Where(q => q.PollId == pollId)
@@ -17,13 +17,6 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
             .ProjectToType<QuestionResponse>()
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-        //.Select(q => new QuestionResponse(
-        //    q.Id,
-        //    q.Content,
-        //    q.Answers.Select(answer => new AnswerResponse(answer.Id, answer.Content))
-
-        //))
-
 
         return Result.Success<IEnumerable<QuestionResponse>>(questions);
     }
@@ -37,17 +30,53 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
             .SingleOrDefaultAsync(cancellationToken);
 
         if (question is null)
-            return Result.Failure<QuestionResponse>(QuestionErrors.NotFound);
+            return Result.Failure<QuestionResponse>(QuestionErrors.QuestionNotFound);
 
         return Result.Success(question);
     }
 
-    public async Task<Result<QuestionResponse>> Addsync(int pollId, QuestionRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<QuestionResponse>>> GetAvailableAsync(int pollId, string userId, CancellationToken cancellationToken = default)
+    {
+        var UserHasVoted = await _context.Votes
+            .AnyAsync(v => v.PollId == pollId && v.UserId == userId, cancellationToken);
+
+        if (UserHasVoted)
+            return Result.Failure<IEnumerable<QuestionResponse>>(VoteErrors.DuplicatedVote);
+
+        var pollExists = await _context.Polls
+            .AnyAsync(p => p.Id == pollId &&
+                               p.IsPublished &&
+                               p.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow) &&
+                               p.EndsAt > DateOnly.FromDateTime(DateTime.UtcNow),
+                               cancellationToken);
+
+        if (!pollExists)
+            return Result.Failure<IEnumerable<QuestionResponse>>(PollErrors.PollNotFound);
+
+        var question = await _context.Questions
+            .Where(question => question.PollId == pollId & question.IsActive)
+            .Include(question => question.Answers)
+            .Select(q => new QuestionResponse(
+                q.Id,
+                q.Content,
+                q.Answers.Where(answer => answer.IsActive)
+                          .Select(answer => new AnswerResponse(answer.Id, answer.Content))
+                ))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        if (question is null)
+            return Result.Failure<IEnumerable<QuestionResponse>>(QuestionErrors.QuestionNotFound);
+
+        return Result.Success<IEnumerable<QuestionResponse>>(question);
+    }
+
+    public async Task<Result<QuestionResponse>> AddAsync(int pollId, QuestionRequest request, CancellationToken cancellationToken = default)
     {
         var pollExists = await _context.Polls.AnyAsync(p => p.Id == pollId, cancellationToken);
 
         if (!pollExists)
-            return Result.Failure<QuestionResponse>(PollErrors.NotFound);
+            return Result.Failure<QuestionResponse>(PollErrors.PollNotFound);
 
         var contentExists = await _context.Questions
             .AnyAsync(q => q.Content == request.Content && q.PollId == pollId, cancellationToken);
@@ -79,7 +108,7 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
             .SingleOrDefaultAsync(q => q.Id == id && q.PollId == pollId, cancellationToken);
 
         if (question is null)
-            return Result.Failure(QuestionErrors.NotFound);
+            return Result.Failure(QuestionErrors.QuestionNotFound);
 
         question.Content = request.Content;
 
@@ -108,11 +137,8 @@ public class QuestionService(ApplicationDbContext context) : IQuestionService
             .Where(q => q.Id == id && q.PollId == pollId)
             .SingleOrDefaultAsync(cancellationToken);
 
-        //var question = await _context.Questions
-        //    .SingleOrDefaultAsync(q => q.Id == id && q.PollId == pollId, cancellationToken: cancellationToken);
-
         if (question is null)
-            return Result.Failure<QuestionResponse>(QuestionErrors.NotFound);
+            return Result.Failure<QuestionResponse>(QuestionErrors.QuestionNotFound);
 
         question.IsActive = !question.IsActive;
 

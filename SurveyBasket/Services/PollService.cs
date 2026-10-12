@@ -10,6 +10,14 @@ public class PollService(ApplicationDbContext context) : IPollService
                          .ProjectToType<PollResponse>()
                          .ToListAsync(cancellationToken: cancellationToken);
 
+    public async Task<IEnumerable<PollResponse>> GetCurrentAsync(CancellationToken cancellationToken)
+        => await _context.Polls
+                         .AsNoTracking()
+                         .Where(p => p.IsPublished &&
+                                         p.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow) &&
+                                         p.EndsAt > DateOnly.FromDateTime(DateTime.UtcNow))
+                         .ProjectToType<PollResponse>()
+                         .ToListAsync(cancellationToken: cancellationToken);
 
     public async Task<Result<PollResponse>> GetAsync(int id, CancellationToken cancellationToken)
     {
@@ -17,7 +25,7 @@ public class PollService(ApplicationDbContext context) : IPollService
 
         return poll is not null
             ? Result.Success(poll.Adapt<PollResponse>())
-            : Result.Failure<PollResponse>(PollErrors.NotFound);
+            : Result.Failure<PollResponse>(PollErrors.PollNotFound);
 
     }
 
@@ -43,7 +51,7 @@ public class PollService(ApplicationDbContext context) : IPollService
         var currentPoll = await _context.Polls.FindAsync([id], cancellationToken);
 
         if (currentPoll is null)
-            return Result.Failure(PollErrors.NotFound);
+            return Result.Failure(PollErrors.PollNotFound);
 
         var isTitleDuplicated = await _context.Polls.AnyAsync(p => p.Title == pollRequest.Title && p.Id != id, cancellationToken);
 
@@ -65,7 +73,7 @@ public class PollService(ApplicationDbContext context) : IPollService
         var poll = await _context.Polls.FindAsync([id], cancellationToken);
 
         if (poll is null)
-            return Result.Failure<Poll>(PollErrors.NotFound);
+            return Result.Failure<Poll>(PollErrors.PollNotFound);
 
         _context.Remove(poll);
         await _context.SaveChangesAsync(cancellationToken);
@@ -78,7 +86,7 @@ public class PollService(ApplicationDbContext context) : IPollService
         var poll = await _context.Polls.FindAsync([id], cancellationToken);
 
         if (poll is null)
-            return Result.Failure(PollErrors.NotFound);
+            return Result.Failure(PollErrors.PollNotFound);
 
         poll.IsPublished = !poll.IsPublished;
 

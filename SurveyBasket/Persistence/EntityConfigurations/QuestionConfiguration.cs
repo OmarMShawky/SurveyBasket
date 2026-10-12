@@ -1,4 +1,4 @@
-﻿namespace SurveyBasket.Persistence.EntitiesConfigurations;
+﻿namespace SurveyBasket.Persistence.EntityConfigurations;
 
 public class QuestionConfiguration : IEntityTypeConfiguration<Question>
 {

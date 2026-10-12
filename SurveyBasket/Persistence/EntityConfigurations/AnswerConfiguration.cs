@@ -1,6 +1,6 @@
-﻿namespace SurveyBasket.Persistence.EntitiesConfigurations;
+﻿namespace SurveyBasket.Persistence.EntityConfigurations;
 
-public class AnswerConfigurations : IEntityTypeConfiguration<Answer>
+public class AnswerConfiguration : IEntityTypeConfiguration<Answer>
 {
     public void Configure(EntityTypeBuilder<Answer> builder)
     {

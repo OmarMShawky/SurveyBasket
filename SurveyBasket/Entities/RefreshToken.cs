@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Globalization;
-
-namespace SurveyBasket.Entities;
+﻿namespace SurveyBasket.Entities;
 
 [Owned]
 public class RefreshToken
