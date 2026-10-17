@@ -14,6 +14,7 @@ global using SurveyBasket.Contracts.Answers;
 global using SurveyBasket.Contracts.Authentication;
 global using SurveyBasket.Contracts.Polls;
 global using SurveyBasket.Contracts.Questions;
+global using SurveyBasket.Contracts.Results;
 global using SurveyBasket.Contracts.Votes;
 global using SurveyBasket.Entities;
 global using SurveyBasket.Errors;
