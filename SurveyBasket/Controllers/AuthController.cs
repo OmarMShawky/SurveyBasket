@@ -15,6 +15,13 @@ public class AuthController(IAuthService authService) : ControllerBase
 
         return result.IsSuccess ? Ok(result.Value) : result.ToProblem();
     }
+    [HttpPost("login-username")]
+    public async Task<IActionResult> LoginByUsername([FromBody] string username, string password, CancellationToken cancellationToken)
+    {
+        var result = await _authService.GetTokenForUsernameAsync(username, password, cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : result.ToProblem();
+    }
 
 
     [HttpPost("refresh")]
@@ -35,5 +42,5 @@ public class AuthController(IAuthService authService) : ControllerBase
         return result.IsSuccess ? NoContent() : result.ToProblem();
 
     }
-    
+
 }

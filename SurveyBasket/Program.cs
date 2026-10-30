@@ -1,9 +1,29 @@
+using Serilog;
 using SurveyBasket;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDependencies(builder.Configuration);
- 
+
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("Polls", o => o
+        .Cache()
+        .Expire(TimeSpan.FromSeconds(60))
+        .Tag("availableQuestions"));
+});
+
+builder.Services.AddOutputCache(outputCache =>
+{
+    outputCache.AddPolicy("Questions", policy =>
+    policy.Cache().Expire(TimeSpan.FromHours(1)).Tag("newQuestions"));
+});
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration.ReadFrom.Configuration(context.Configuration);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
